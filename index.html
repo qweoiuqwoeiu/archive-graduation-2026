@@ -700,18 +700,16 @@ body::before{
 <audio id="audio" preload="auto"></audio>
 
 <script>
-// Pre-resolved direct URLs (static.coze.site, Content-Type: audio/mpeg, CORS: *)
-// These bypass coze.cn's 302 redirect which returns text/html and breaks <audio> on mobile.
-// Sign validity: ~28 days from 2026-06-09. Re-resolve via curl -sIL if expired.
+// Audio files served locally from GitHub Pages - permanently available, no expiration
 const tracks=[
-  {name:'凤凰花开的路口',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/1.%E5%87%A4%E5%87%B0%E8%8A%B1%E5%BC%80%E7%9A%84%E8%B7%AF%E5%8F%A3v4_1780908523359_0_rs6b.m4a?sign=1783416066-b7bc2e402d-0-30dd115e242eb4b7538d54c11f0c748a64da1143f16ad7b26e1e0dbf4551b4b9',dur:'4:11',sec:251},
-  {name:'成都',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/2.%E6%88%90%E9%83%BDv2_1780908523359_1_1gyz.m4a?sign=1783416066-e70b29c469-0-8ea06f9f266992f2cddccaa7f5bf508c97f44389d89ee84782f68c24fdcd7a4e',dur:'5:28',sec:328},
-  {name:'好久不见',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/3.%E5%A5%BD%E4%B9%85%E4%B8%8D%E8%A7%81v4_1780908523359_2_hhd0.m4a?sign=1783416066-191ecce7cd-0-d58b818158169fe4c6de0af0a8000337b9d9751e95e2062932535b843eb7f00e',dur:'4:05',sec:245},
-  {name:'花香',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/4.%E8%8A%B1%E9%A6%99v5_1780908523360_3_xpec.m4a?sign=1783416066-4496cc7482-0-c860c5990727c5906b604716afd41c004b8b5128126fcdef8ec94fa65eb691c6',dur:'4:26',sec:266},
-  {name:'裹着心的光',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/5.%E8%A3%B9%E7%9D%80%E5%BF%83%E7%9A%84%E5%85%89v22_1780908523360_4_bgy9.m4a?sign=1783416066-6ad68f060c-0-8cf4c541bdaf989da84c939568d88ba4abd88fa06539551aad304787cf62a3ac',dur:'2:50',sec:170},
-  {name:'夜空中最亮的星',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/6.%E5%A4%9C%E7%A9%BA%E4%B8%AD%E6%9C%80%E4%BA%AE%E7%9A%84%E6%98%9Fv8_1780908523360_5_ha95.m4a?sign=1783416066-355dd37695-0-12777f21053c17a7be0f9e8c36d806ff0274e1810024460b8aec7424b6cdcff4',dur:'4:12',sec:252},
-  {name:'晚风',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/7.%E6%99%9A%E9%A3%8Ev5_1780908523360_6_ahrn.m4a?sign=1783416066-7f79d9dc39-0-89b97728a450db9bca3b99c4ce9d527bdad698db49724e916bc43d423e5786f4',dur:'3:31',sec:211},
-  {name:'这世界那么多人',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/8.%E8%BF%99%E4%B8%96%E7%95%8C%E9%82%A3%E4%B9%88%E5%A4%9A%E4%BA%BAv6_1780908523361_7_kaej.m4a?sign=1783416066-2132346462-0-7dcb1f2d74e03f4ce265276188200a8e79294f532cc4b233fab2e266e3164a67',dur:'5:00',sec:300},
+  {name:'凤凰花开的路口',url:'./audio/01_凤凰花开的路口.m4a',dur:'4:11',sec:251},
+  {name:'成都',url:'./audio/02_成都.m4a',dur:'5:28',sec:328},
+  {name:'好久不见',url:'./audio/03_好久不见.m4a',dur:'4:05',sec:245},
+  {name:'花香',url:'./audio/04_花香.m4a',dur:'4:26',sec:266},
+  {name:'裹着心的光',url:'./audio/05_裹着心的光.m4a',dur:'2:50',sec:170},
+  {name:'夜空中最亮的星',url:'./audio/06_夜空中最亮的星.m4a',dur:'4:12',sec:252},
+  {name:'晚风',url:'./audio/07_晚风.m4a',dur:'3:31',sec:211},
+  {name:'这世界那么多人',url:'./audio/08_这世界那么多人.m4a',dur:'5:00',sec:300},
 ];
 
 let current=-1,playing=false;
