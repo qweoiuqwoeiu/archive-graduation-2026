@@ -701,17 +701,37 @@ body::before{
 
 <script>
 const tracks=[
-  {name:'凤凰花开的路口',url:'https://www.coze.cn/s/OrDP2fFMgW4/',dur:'4:11',sec:251},
-  {name:'成都',url:'https://www.coze.cn/s/VKySwRVis1Q/',dur:'5:28',sec:328},
-  {name:'好久不见',url:'https://www.coze.cn/s/TXnztSn2TAA/',dur:'4:05',sec:245},
-  {name:'花香',url:'https://www.coze.cn/s/HxIzA_FIgX0/',dur:'4:26',sec:266},
-  {name:'裹着心的光',url:'https://www.coze.cn/s/NXmn4ervxTI/',dur:'2:50',sec:170},
-  {name:'夜空中最亮的星',url:'https://www.coze.cn/s/JPv1gGV8Tk0/',dur:'4:12',sec:252},
-  {name:'晚风',url:'https://www.coze.cn/s/NYE7YeFQegQ/',dur:'3:31',sec:211},
-  {name:'这世界那么多人',url:'https://www.coze.cn/s/U2vqFzfmwdI/',dur:'5:00',sec:300},
+  {name:'凤凰花开的路口',shortUrl:'https://www.coze.cn/s/OrDP2fFMgW4/',url:null,dur:'4:11',sec:251},
+  {name:'成都',shortUrl:'https://www.coze.cn/s/VKySwRVis1Q/',url:null,dur:'5:28',sec:328},
+  {name:'好久不见',shortUrl:'https://www.coze.cn/s/TXnztSn2TAA/',url:null,dur:'4:05',sec:245},
+  {name:'花香',shortUrl:'https://www.coze.cn/s/HxIzA_FIgX0/',url:null,dur:'4:26',sec:266},
+  {name:'裹着心的光',shortUrl:'https://www.coze.cn/s/NXmn4ervxTI/',url:null,dur:'2:50',sec:170},
+  {name:'夜空中最亮的星',shortUrl:'https://www.coze.cn/s/JPv1gGV8Tk0/',url:null,dur:'4:12',sec:252},
+  {name:'晚风',shortUrl:'https://www.coze.cn/s/NYE7YeFQegQ/',url:null,dur:'3:31',sec:211},
+  {name:'这世界那么多人',shortUrl:'https://www.coze.cn/s/U2vqFzfmwdI/',url:null,dur:'5:00',sec:300},
 ];
 
-let current=-1,playing=false;
+// URL resolver: coze.cn short links return text/html + 302 redirect,
+// which breaks <audio> on mobile browsers. We fetch the short link,
+// follow the 302, and use the final static.coze.site URL (audio/mpeg) directly.
+const resolvedUrls={};
+
+async function resolveUrl(shortUrl){
+  if(resolvedUrls[shortUrl])return resolvedUrls[shortUrl];
+  try{
+    const resp=await fetch(shortUrl,{method:'GET',mode:'cors',redirect:'follow'});
+    if(resp.ok && resp.url && resp.url.includes('static.coze.site')){
+      resolvedUrls[shortUrl]=resp.url;
+      return resp.url;
+    }
+  }catch(e){
+    console.warn('URL resolve failed for',shortUrl,e);
+  }
+  // fallback: use short URL directly
+  return shortUrl;
+}
+
+let current=-1,playing=false,resolving=false;
 const audio=document.getElementById('audio');
 const vinyl=document.getElementById('vinyl');
 const trackItems=document.querySelectorAll('.track-item');
@@ -727,17 +747,30 @@ const playerTrackName=document.getElementById('playerTrackName');
 
 function fmt(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec}
 
-function play(i){
+async function play(i){
   if(i<0||i>=tracks.length)return;
   current=i;
-  audio.src=tracks[i].url;
-  audio.play().catch(()=>{});
-  playing=true;
+  updateUI();
+  // Show loading state
+  playerTrackName.textContent=tracks[i].name+' (加载中...)';
+  resolving=true;
+  const realUrl=await resolveUrl(tracks[i].shortUrl);
+  resolving=false;
+  tracks[i].url=realUrl;
+  audio.src=realUrl;
+  try{
+    await audio.play();
+    playing=true;
+  }catch(e){
+    console.warn('Playback failed:',e);
+    playing=false;
+  }
   updateUI();
 }
 
 function toggle(){
   if(current<0){play(0);return}
+  if(resolving)return;
   if(playing){audio.pause();playing=false}else{audio.play().catch(()=>{});playing=true}
   updateUI();
 }
@@ -746,7 +779,9 @@ function updateUI(){
   const icon=playing?'<polygon points="8,7 10,7 10,17 8,17"/><polygon points="14,7 16,7 16,17 14,17"/>':'<polygon points="9.5,7.5 16.5,12 9.5,16.5"/>';
   playIcon.innerHTML=icon;
   vinyl.classList.toggle('playing',playing);
-  playerTrackName.textContent=current>=0?tracks[current].name:'选择一首歌';
+  if(!resolving){
+    playerTrackName.textContent=current>=0?tracks[current].name:'选择一首歌';
+  }
   trackItems.forEach((el,idx)=>{
     el.classList.toggle('active',idx===current);
   });
@@ -766,6 +801,18 @@ audio.addEventListener('ended',()=>{
   }
 });
 
+// Error handling: if resolved URL fails, try re-resolving
+audio.addEventListener('error',async()=>{
+  if(current<0)return;
+  console.warn('Audio error, re-resolving URL for track',current);
+  delete resolvedUrls[tracks[current].shortUrl];
+  tracks[current].url=null;
+  const realUrl=await resolveUrl(tracks[current].shortUrl);
+  tracks[current].url=realUrl;
+  audio.src=realUrl;
+  try{await audio.play();playing=true;updateUI()}catch(e){console.warn('Retry failed:',e)}
+});
+
 trackItems.forEach(el=>{el.addEventListener('click',()=>play(+el.dataset.index))});
 btnPlay.addEventListener('click',toggle);
 btnPrev.addEventListener('click',()=>{if(current>0)play(current-1)});
@@ -776,6 +823,13 @@ progressWrap.addEventListener('click',e=>{
   const rect=progressWrap.getBoundingClientRect();
   const pct=(e.clientX-rect.left)/rect.width;
   audio.currentTime=pct*audio.duration;
+});
+
+// Pre-resolve all URLs in background after page load
+window.addEventListener('load',()=>{
+  tracks.forEach(t=>{
+    resolveUrl(t.shortUrl).then(url=>{t.url=url}).catch(()=>{});
+  });
 });
 
 // Particles
