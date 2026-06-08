@@ -700,38 +700,21 @@ body::before{
 <audio id="audio" preload="auto"></audio>
 
 <script>
+// Pre-resolved direct URLs (static.coze.site, Content-Type: audio/mpeg, CORS: *)
+// These bypass coze.cn's 302 redirect which returns text/html and breaks <audio> on mobile.
+// Sign validity: ~28 days from 2026-06-09. Re-resolve via curl -sIL if expired.
 const tracks=[
-  {name:'凤凰花开的路口',shortUrl:'https://www.coze.cn/s/OrDP2fFMgW4/',url:null,dur:'4:11',sec:251},
-  {name:'成都',shortUrl:'https://www.coze.cn/s/VKySwRVis1Q/',url:null,dur:'5:28',sec:328},
-  {name:'好久不见',shortUrl:'https://www.coze.cn/s/TXnztSn2TAA/',url:null,dur:'4:05',sec:245},
-  {name:'花香',shortUrl:'https://www.coze.cn/s/HxIzA_FIgX0/',url:null,dur:'4:26',sec:266},
-  {name:'裹着心的光',shortUrl:'https://www.coze.cn/s/NXmn4ervxTI/',url:null,dur:'2:50',sec:170},
-  {name:'夜空中最亮的星',shortUrl:'https://www.coze.cn/s/JPv1gGV8Tk0/',url:null,dur:'4:12',sec:252},
-  {name:'晚风',shortUrl:'https://www.coze.cn/s/NYE7YeFQegQ/',url:null,dur:'3:31',sec:211},
-  {name:'这世界那么多人',shortUrl:'https://www.coze.cn/s/U2vqFzfmwdI/',url:null,dur:'5:00',sec:300},
+  {name:'凤凰花开的路口',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/1.%E5%87%A4%E5%87%B0%E8%8A%B1%E5%BC%80%E7%9A%84%E8%B7%AF%E5%8F%A3v4_1780908523359_0_rs6b.m4a?sign=1783416066-b7bc2e402d-0-30dd115e242eb4b7538d54c11f0c748a64da1143f16ad7b26e1e0dbf4551b4b9',dur:'4:11',sec:251},
+  {name:'成都',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/2.%E6%88%90%E9%83%BDv2_1780908523359_1_1gyz.m4a?sign=1783416066-e70b29c469-0-8ea06f9f266992f2cddccaa7f5bf508c97f44389d89ee84782f68c24fdcd7a4e',dur:'5:28',sec:328},
+  {name:'好久不见',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/3.%E5%A5%BD%E4%B9%85%E4%B8%8D%E8%A7%81v4_1780908523359_2_hhd0.m4a?sign=1783416066-191ecce7cd-0-d58b818158169fe4c6de0af0a8000337b9d9751e95e2062932535b843eb7f00e',dur:'4:05',sec:245},
+  {name:'花香',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/4.%E8%8A%B1%E9%A6%99v5_1780908523360_3_xpec.m4a?sign=1783416066-4496cc7482-0-c860c5990727c5906b604716afd41c004b8b5128126fcdef8ec94fa65eb691c6',dur:'4:26',sec:266},
+  {name:'裹着心的光',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/5.%E8%A3%B9%E7%9D%80%E5%BF%83%E7%9A%84%E5%85%89v22_1780908523360_4_bgy9.m4a?sign=1783416066-6ad68f060c-0-8cf4c541bdaf989da84c939568d88ba4abd88fa06539551aad304787cf62a3ac',dur:'2:50',sec:170},
+  {name:'夜空中最亮的星',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/6.%E5%A4%9C%E7%A9%BA%E4%B8%AD%E6%9C%80%E4%BA%AE%E7%9A%84%E6%98%9Fv8_1780908523360_5_ha95.m4a?sign=1783416066-355dd37695-0-12777f21053c17a7be0f9e8c36d806ff0274e1810024460b8aec7424b6cdcff4',dur:'4:12',sec:252},
+  {name:'晚风',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/7.%E6%99%9A%E9%A3%8Ev5_1780908523360_6_ahrn.m4a?sign=1783416066-7f79d9dc39-0-89b97728a450db9bca3b99c4ce9d527bdad698db49724e916bc43d423e5786f4',dur:'3:31',sec:211},
+  {name:'这世界那么多人',url:'https://static.coze.site/7625993525846393097-data_volume/files/%E6%89%80%E6%9C%89%E5%AF%B9%E8%AF%9D/%E4%B8%BB%E5%AF%B9%E8%AF%9D/%E7%94%A8%E6%88%B7%E4%B8%8A%E4%BC%A0/8.%E8%BF%99%E4%B8%96%E7%95%8C%E9%82%A3%E4%B9%88%E5%A4%9A%E4%BA%BAv6_1780908523361_7_kaej.m4a?sign=1783416066-2132346462-0-7dcb1f2d74e03f4ce265276188200a8e79294f532cc4b233fab2e266e3164a67',dur:'5:00',sec:300},
 ];
 
-// URL resolver: coze.cn short links return text/html + 302 redirect,
-// which breaks <audio> on mobile browsers. We fetch the short link,
-// follow the 302, and use the final static.coze.site URL (audio/mpeg) directly.
-const resolvedUrls={};
-
-async function resolveUrl(shortUrl){
-  if(resolvedUrls[shortUrl])return resolvedUrls[shortUrl];
-  try{
-    const resp=await fetch(shortUrl,{method:'GET',mode:'cors',redirect:'follow'});
-    if(resp.ok && resp.url && resp.url.includes('static.coze.site')){
-      resolvedUrls[shortUrl]=resp.url;
-      return resp.url;
-    }
-  }catch(e){
-    console.warn('URL resolve failed for',shortUrl,e);
-  }
-  // fallback: use short URL directly
-  return shortUrl;
-}
-
-let current=-1,playing=false,resolving=false;
+let current=-1,playing=false;
 const audio=document.getElementById('audio');
 const vinyl=document.getElementById('vinyl');
 const trackItems=document.querySelectorAll('.track-item');
@@ -747,30 +730,16 @@ const playerTrackName=document.getElementById('playerTrackName');
 
 function fmt(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec}
 
-async function play(i){
+function play(i){
   if(i<0||i>=tracks.length)return;
   current=i;
-  updateUI();
-  // Show loading state
-  playerTrackName.textContent=tracks[i].name+' (加载中...)';
-  resolving=true;
-  const realUrl=await resolveUrl(tracks[i].shortUrl);
-  resolving=false;
-  tracks[i].url=realUrl;
-  audio.src=realUrl;
-  try{
-    await audio.play();
-    playing=true;
-  }catch(e){
-    console.warn('Playback failed:',e);
-    playing=false;
-  }
+  audio.src=tracks[i].url;
+  audio.play().then(()=>{playing=true;updateUI()}).catch(e=>{console.warn('Playback failed:',e);playing=false;updateUI()});
   updateUI();
 }
 
 function toggle(){
   if(current<0){play(0);return}
-  if(resolving)return;
   if(playing){audio.pause();playing=false}else{audio.play().catch(()=>{});playing=true}
   updateUI();
 }
@@ -779,9 +748,7 @@ function updateUI(){
   const icon=playing?'<polygon points="8,7 10,7 10,17 8,17"/><polygon points="14,7 16,7 16,17 14,17"/>':'<polygon points="9.5,7.5 16.5,12 9.5,16.5"/>';
   playIcon.innerHTML=icon;
   vinyl.classList.toggle('playing',playing);
-  if(!resolving){
-    playerTrackName.textContent=current>=0?tracks[current].name:'选择一首歌';
-  }
+  playerTrackName.textContent=current>=0?tracks[current].name:'选择一首歌';
   trackItems.forEach((el,idx)=>{
     el.classList.toggle('active',idx===current);
   });
@@ -801,16 +768,9 @@ audio.addEventListener('ended',()=>{
   }
 });
 
-// Error handling: if resolved URL fails, try re-resolving
-audio.addEventListener('error',async()=>{
-  if(current<0)return;
-  console.warn('Audio error, re-resolving URL for track',current);
-  delete resolvedUrls[tracks[current].shortUrl];
-  tracks[current].url=null;
-  const realUrl=await resolveUrl(tracks[current].shortUrl);
-  tracks[current].url=realUrl;
-  audio.src=realUrl;
-  try{await audio.play();playing=true;updateUI()}catch(e){console.warn('Retry failed:',e)}
+// Simple error feedback
+audio.addEventListener('error',()=>{
+  if(current>=0) playerTrackName.textContent=tracks[current].name+' (加载失败)';
 });
 
 trackItems.forEach(el=>{el.addEventListener('click',()=>play(+el.dataset.index))});
@@ -823,13 +783,6 @@ progressWrap.addEventListener('click',e=>{
   const rect=progressWrap.getBoundingClientRect();
   const pct=(e.clientX-rect.left)/rect.width;
   audio.currentTime=pct*audio.duration;
-});
-
-// Pre-resolve all URLs in background after page load
-window.addEventListener('load',()=>{
-  tracks.forEach(t=>{
-    resolveUrl(t.shortUrl).then(url=>{t.url=url}).catch(()=>{});
-  });
 });
 
 // Particles
